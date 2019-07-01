@@ -1,0 +1,19 @@
+{
+  "name": "e-camera",
+  "productName": "electron相机应用",
+  "author": "admin",
+  "version": "1.0.0",
+  "description": "e-camera",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^5.0.4"
+  },
+  "dependencies": {
+    "electron-packager": "^14.0.0",
+    "electron-updater": "^4.0.6"
+  }
+}
