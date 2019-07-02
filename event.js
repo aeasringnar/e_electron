@@ -38,7 +38,13 @@ function beginSave(filePath, fileData) {
             }
             fileData = null;
         });
+    }
+}
 
+// 
+function readFile(filePath) {
+    if (filePath) {
+        window.document.getElementById('newText').value = fs.readFileSync(filePath, 'utf8');
     }
 }
 
@@ -65,6 +71,24 @@ function saveFile() {
     beginSave(filePath,fileData)
   }
 
+
+// 打开有筛选的对话框
+function openFile(){
+    var options = {};
+    options.title = '打开文件';
+    options.buttonLabel = '打开';
+    //  Mac OSX 默认目录是桌面
+    options.message = '打开文件';
+    options.defaultPath = '.';
+    options.properties = ['openFile'];
+    options.filters = [
+        {name: '文本文件', extensions: ['txt','js','html','md']}
+    ]
+    filePath = dialog.showOpenDialog(options)
+    console.log('打开的文件路径：', filePath)
+    readFile(filePath[0])
+  }
+
 //监听与主进程的通信
 ipcRenderer.on('action', (event, arg) => {
     switch (arg) {
@@ -75,7 +99,7 @@ ipcRenderer.on('action', (event, arg) => {
             eventQuit();
             break;
         case 'openfile':
-            eventQuit();
+            openFile();
             break;
         case 'savefile':
             saveFile();
