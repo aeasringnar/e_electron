@@ -24,7 +24,7 @@ function createWindow () {
       submenu: [    
         {
           label: '新建文件',
-          click:()=>{w
+          click:()=>{
             win.webContents.send('action', 'newfile');
           }
         },
@@ -33,7 +33,7 @@ function createWindow () {
         },
         {
           label: '打开文件',
-          click:()=>{w
+          click:()=>{
             win.webContents.send('action', 'openfile');
           }
         },
@@ -42,7 +42,7 @@ function createWindow () {
         },
         {
           label: '保存文件',
-          click:()=>{w
+          click:()=>{
             win.webContents.send('action', 'savefile');
           }
         },

@@ -6,6 +6,9 @@ const Menu = remote.Menu;
 const fs = require('fs');
 var $ = require('jquery');
 
+let filePath = ''
+let fileData = ''
+
 // 用来解释主进程和渲染进程的实例
 // 流程：先在主进程中监听窗口的close事件，然后当发生点击时，将消息从主进程发送到渲染进程。渲染进程收到消息后执行某些操作后，将消息发回主进程，由主进程执行剩下的操作
 function eventQuit() {
@@ -22,11 +25,60 @@ function eventQuit() {
     })
 }
 
+// 保存文件将文件保存起来
+function beginSave(filePath, fileData) {
+    if (filePath) {
+        fs.writeFile(filePath, fileData, (err) => {
+            if (err) {
+                alert(`保存文件有问题: ${err.message}`)
+            } else {
+                alert('保存成功')
+                fileList = filePath.split('\\')
+                window.document.title = fileList[fileList.length]
+            }
+            fileData = null;
+        });
+
+    }
+}
+
+function saveFile() {
+    if (!filePath) {
+        var options = {};
+        options.title = '保存文件';
+        options.buttonLabel = '保存';
+        options.defaultPath = '.';
+        options.nameFieldLabel = '保存文件';
+        options.showsTagField = false;
+        options.filters = [
+            {name: '文本文件', extensions: ['txt','js','html','md']},
+            {name: '所有文件', extensions: ['*']}
+        ]
+        filePath = dialog.showSaveDialog(options)
+        // dialog.showSaveDialog(options,(filePath) => {
+        //     console.log('查看文件路径：',filePath)
+        //     filePath = filePath;
+        // })
+    }
+    fileData = window.document.getElementById('newText').value
+    console.log('内容：',fileData)
+    beginSave(filePath,fileData)
+  }
+
 //监听与主进程的通信
 ipcRenderer.on('action', (event, arg) => {
     switch (arg) {
         case 'exiting':
             eventQuit();
+            break;
+        case 'newfile':
+            eventQuit();
+            break;
+        case 'openfile':
+            eventQuit();
+            break;
+        case 'savefile':
+            saveFile();
             break;
     }
 });
@@ -44,8 +96,8 @@ window.onload = function() {
       ];
     const contextMenu = Menu.buildFromTemplate(contextMenuTemplate);
     newText.addEventListener('contextmenu',function(event) {
-        event.preventDefault();  // 阻止事件的默认行为，例如，submit 按钮将不会向 form 提交
-        contextMenu.popup(remote.getCurrentWindow()); 
+        event.preventDefault();
+        contextMenu.popup(remote.getCurrentWindow());
     })
     
     // document.getElementById('newText').onkeydown = function(event) {
