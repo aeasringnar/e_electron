@@ -48,17 +48,29 @@ window.onload = function() {
         contextMenu.popup(remote.getCurrentWindow()); 
     })
     
-    document.getElementById('newText').onkeydown = function(event) {
-        console.log('按下的键盘是：',event.keyCode)
-        // newText.innerText = '1234'
+    // document.getElementById('newText').onkeydown = function(event) {
+    //     console.log('按下的键盘是：',event.keyCode)
+    //     newText.value = '1234'
+    // }
+    document.getElementById('newText').onkeyup = function(event) {
+        // console.log('按下的键盘是：',event.keyCode)
+        // if (event.ctrlKey && event.keyCode === 67){ 
+        //     alert('你按下了CTRL+C'); 
+        // } 
+        switch (event.keyCode) {
+            case 9:
+                newText.value += '    '
+                break;
+        }
     }
     // console.log($('#newText'))
     // $('#newText').keydown(function (evenet) {
     //     console.log('按下的键盘是：',event.keyCode)
     // })
-    document.getElementById("newText").addEventListener("input", function(event) {
-        console.log(event.data)
-    });
+    // 监听input事件
+    // document.getElementById("newText").addEventListener("input", function(event) {
+    //     console.log(event.data)
+    // });
 }
 
 // 监听浏览器窗口变化时执行的函数
