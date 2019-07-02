@@ -18,27 +18,43 @@ function createWindow () {
   })
   console.log('system edition:', process.platform)
   // 使用模版创建菜单
-  const template = [{
-        label: '文件',   // 设置菜单项文本
-        submenu: [    // 设置子菜单
-          {
-              label: '关于',
-              role: 'about',       // 设置菜单角色（关于），只针对 Mac  OS X 系统
-              click: (menuItem, browserWindow, event)=>{     // 设置单击菜单项的动作（弹出一个新的模态窗口）
-                  var aboutWin = new BrowserWindow({width:300,height:200,parent:win,modal: true});
-                  aboutWin.loadURL('https://blog.csdn.net/haeasringnar');
-                  console.log('role:', menuItem.role)
-                }
-          },
-          {
-              type: 'separator'       // 在此处为菜单加分隔栏
-          },
-          {
-              label: '关闭',
-              accelerator: 'Ctrl+Q',      // 设置菜单快捷键
-              click: ()=>{win.close()}
+  const template = [
+    {
+      label: '文件',
+      submenu: [    
+        {
+          label: '新建文件',
+          click:()=>{w
+            win.webContents.send('action', 'newfile');
           }
-        ]
+        },
+        {
+          type: 'separator'
+        },
+        {
+          label: '打开文件',
+          click:()=>{w
+            win.webContents.send('action', 'openfile');
+          }
+        },
+        {
+          type: 'separator'
+        },
+        {
+          label: '保存文件',
+          click:()=>{w
+            win.webContents.send('action', 'savefile');
+          }
+        },
+        {
+          type: 'separator'
+        },
+        {
+          label: '关闭',
+          accelerator: 'Ctrl+Q',      // 设置菜单快捷键
+          click: ()=>{win.close()}
+        }
+      ]
     },
     // {
     //   label: '调试',
@@ -52,36 +68,37 @@ function createWindow () {
     {
       label: '编辑',
       submenu: [
-          {
-              label: '撤销',
-              role:'undo',
-              click:()=>{win.webContents.undo()} // 在点击时执行撤销命令
-          },
-          {
-              label: '重做',
-              role:'redo',
-              click:()=>{win.webContents.redo()} // 在点击时执行重做命令
-          },
-          {
-            type:'separator'   // 设置菜单项分隔条
-          },
-          {
-              label: '剪切',
-              role:'cut',
-              click:()=>{win.webContents.cut()}
-          },
-          {
-              label: '复制',
-              role:'copy',
-              click:()=>{win.webContents.copy()} // 在点击时执行复制命令
-          },
-          {
-              label: '粘贴',
-              role:'paste',
-              click:()=>{win.webContents.paste()} // 在点击时执行粘贴命令
-          }
+        {
+          label: '复制',
+          role:'copy',
+          click:()=>{win.webContents.copy()} // 在点击时执行复制命令
+        },
+        {
+          label: '粘贴',
+          role:'paste',
+          click:()=>{win.webContents.paste()} // 在点击时执行粘贴命令
+        },
+        {
+          label: '剪切',
+          role:'cut',
+          click:()=>{win.webContents.cut()}
+        },
+        {
+          type:'separator'   // 设置菜单项分隔条
+        },
+        {
+          label: '撤销',
+          role:'undo',
+          click:()=>{win.webContents.undo()} // 在点击时执行撤销命令
+        },
+        {
+          label: '重做',
+          role:'redo',
+          click:()=>{win.webContents.redo()} // 在点击时执行重做命令
+        }
       ]
-  }];
+    }
+    ];
 
   const menu = Menu.buildFromTemplate(template);
   //  开始设置菜单
@@ -91,7 +108,7 @@ function createWindow () {
   win.loadFile('index.html')
 
   // 打开调试工具
-  // win.webContents.openDevTools()
+  win.webContents.openDevTools()
   
 
   // 监听窗口关闭的事件，监听到时将一个消息发送给渲染进程
