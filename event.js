@@ -9,7 +9,8 @@ var os  = require('os');
 let platform = os.platform();
 
 let filePath = ''
-let fileData = ''
+let fileDocument = document.getElementById('newText')
+let isSave = true
 
 
 
@@ -29,64 +30,72 @@ function eventQuit() {
     })
 }
 
-// 询问是否保存当前文档
-function askSave() {
-    var options = {};
-    options.title = '是否将当前文档保存?';
-    options.message = '是否将当前文档保存?';
-    options.type = 'none';
-    options.buttons = ['Yes', 'No'];
-    dialog.showMessageBox(options, (response) => {
-        if (response == 0) {
-            saveFile()
-        }
-    })
+function setNew() {
+    document.getElementById('newText').value = ''
+    filePath = ''
+    window.document.title = '无标题文档'
 }
 
-// 保存文件将文件保存起来
-function beginSave(filePath, fileData) {
-    if (filePath) {
-        fs.writeFile(filePath, fileData, (err) => {
-            if (err) {
-                alert(`保存文件有问题: ${err.message}`)
-            } else {
-                alert('保存成功')
-                var fileList = filePath.split('\\')
-                window.document.title = fileList[fileList.length]
-            }
-            fileData = null;
-        });
+function askChoice(ask_type) {
+    if(ask_type == 0) {
+        setNew()
+    } else if (ask_type == 1) {
+        readFile(openFile())
+    } else {
+        ipcRenderer.send('reqaction', 'exit');
     }
+}
+
+// 询问是否保存当前文档 ask_type: 0 newfile 1 openfile 2 exit
+function askSave(ask_type) {
+    if (isSave == false) {
+        var options = {};
+        options.title = '是否将当前文档保存?';
+        options.message = '是否将当前文档保存?';
+        options.type = 'none';
+        options.buttons = ['Yes', 'No'];
+        dialog.showMessageBox(options, (response) => {
+            if (response == 0) {
+                if (filePath == '') {
+                    // 没有被保存过的新文档，需要先打开保存对话框
+                    filePath = openSaveDialog()
+                    writeFile(filePath, fileDocument.value)
+                    askChoice(ask_type)
+                } else {
+                    // 已经被保存过的，存在路径，直接保存文件
+                    writeFile(filePath, fileDocument.value)
+                    askChoice(ask_type)
+                }
+            } else{
+                askChoice(ask_type)
+            }
+        })
+    }
+}
+
+
+// 写入文档
+function writeFile(filePath, fileData) {
+    fs.writeFileSync(filePath, fileData);
 }
 
 // 读取文档
 function readFile(filePath) {
-    if (filePath) {
-        window.document.getElementById('newText').value = fs.readFileSync(filePath, 'utf8');
-    }
+    window.document.getElementById('newText').value = fs.readFileSync(filePath, 'utf8');
 }
 
-function saveFile() {
-    if (!filePath) {
-        var options = {};
-        options.title = '保存文件';
-        options.buttonLabel = '保存';
-        options.defaultPath = '.';
-        options.nameFieldLabel = '保存文件';
-        options.showsTagField = false;
-        options.filters = [
-            {name: '文本文件', extensions: ['txt','js','html','md']},
-            {name: '所有文件', extensions: ['*']}
-        ]
-        filePath = dialog.showSaveDialog(options)
-        // dialog.showSaveDialog(options,(filePath) => {
-        //     console.log('查看文件路径：',filePath)
-        //     filePath = filePath;
-        // })
-    }
-    fileData = window.document.getElementById('newText').value
-    console.log('内容：',fileData)
-    beginSave(filePath,fileData)
+function openSaveDialog() {
+    var options = {};
+    options.title = '保存文件';
+    options.buttonLabel = '保存';
+    options.defaultPath = '.';
+    options.nameFieldLabel = '保存文件';
+    options.showsTagField = false;
+    options.filters = [
+        {name: '文本文件', extensions: ['txt','js','html','md']},
+        {name: '所有文件', extensions: ['*']}
+    ]
+    return dialog.showSaveDialog(options)
   }
 
 
@@ -95,38 +104,45 @@ function openFile(){
     var options = {};
     options.title = '打开文件';
     options.buttonLabel = '打开';
-    //  Mac OSX 默认目录是桌面
     options.message = '打开文件';
     options.defaultPath = '.';
     options.properties = ['openFile'];
     options.filters = [
         {name: '文本文件', extensions: ['txt','js','html','md']}
     ]
-    filePath = dialog.showOpenDialog(options)
-    console.log('打开的文件路径：', filePath)
-    readFile(filePath[0])
+    return (dialog.showOpenDialog(options))[0]
   }
 
 //监听与主进程的通信
 ipcRenderer.on('action', (event, arg) => {
     switch (arg) {
         case 'exiting':
-            eventQuit();
+            if (fileDocument.value == '' || fileDocument.value == null || isSave == true) {
+                eventQuit()
+            } else {
+                askSave(2)
+            }
             break;
         case 'newfile':
-            if (fileData == '' || fileData == null) {
-                filePath = ''
-                fileData = ''
-                window.document.title = '无标题文档'
+            if (fileDocument.value == '' || fileDocument.value == null || isSave == true) {
+                setNew()
             } else {
-                askSave()
+                askSave(0)
             }
             break;
         case 'openfile':
-            openFile();
+            if (fileDocument.value == '' || fileDocument.value == null || isSave == true) {
+                filePath = openFile()
+                readFile(filePath)
+                console.log(filePath)
+                console.log(filePath.split('\\'))
+            } else {
+                askSave(1)
+            }
             break;
         case 'savefile':
-            saveFile();
+            if (!filePath) filePath = openSaveDialog()
+            writeFile(filePath, fileDocument.value)
             var fileList = filePath.split('\\')
             window.document.title = fileList[fileList.length]
             break;
@@ -150,16 +166,7 @@ window.onload = function() {
         contextMenu.popup(remote.getCurrentWindow());
     })
     
-    // document.getElementById('newText').onkeydown = function(event) {
-    //     console.log('按下的键盘是：',event.keyCode)
-    //     newText.value = '1234'
-    // }
-
     document.getElementById('newText').onkeyup = function(event) {
-        // console.log('按下的键盘是：',event.keyCode)
-        // if (event.ctrlKey && event.keyCode === 67){ 
-        //     alert('你按下了CTRL+C'); 
-        // } 
         switch (event.keyCode) {
             case 9:
                 newText.value += '    '
@@ -167,26 +174,14 @@ window.onload = function() {
         }
     }
     document.getElementById('newText').oninput = function (event) {
-        fileData = event.data
+        if (isSave) document.title += " *"
+        isSave = false
     }
-    // console.log($('#newText'))
-    // $('#newText').keydown(function (evenet) {
-    //     console.log('按下的键盘是：',event.keyCode)
-    // })
-    // 监听input事件
-    // document.getElementById("newText").addEventListener("input", function(event) {
-    //     console.log(event.data)
-    // });
 }
 
 // 监听浏览器窗口变化时执行的函数
 window.onresize = function(){
-    // console.log('屏幕宽度：', window.innerWidth)
-    // console.log('屏幕高度：', window.innerHeight)
     document.getElementsByTagName('body')[0].style.height = window.innerHeight+'px';
     document.getElementById('newText').focus();
 }
-// 全局监听document按键按下事件
-// window.document.onkeydown = function(event) {
-//     console.log('按下的键盘是：',event.keyCode)
-// }
+
