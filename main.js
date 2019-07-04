@@ -16,7 +16,7 @@ function createWindow () {
       nodeIntegration: true
     }
   })
-  console.log('system edition:', process.platform)
+  console.log('system edition:', process.platform)  // darwin:表示macos；linux:表示linux；win32:表示Windows；
   // 使用模版创建菜单
   const template = [
     {
