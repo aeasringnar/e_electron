@@ -1,9 +1,9 @@
 {
-  "name": "e-camera",
-  "productName": "electron相机应用",
+  "name": "e-text",
+  "productName": "electron-text",
   "author": "admin",
   "version": "1.0.0",
-  "description": "e-camera",
+  "description": "e-text",
   "main": "main.js",
   "scripts": {
     "start": "electron ."

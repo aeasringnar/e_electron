@@ -18,7 +18,7 @@ let isSave = true
 // 流程：先在主进程中监听窗口的close事件，然后当发生点击时，将消息从主进程发送到渲染进程。渲染进程收到消息后执行某些操作后，将消息发回主进程，由主进程执行剩下的操作
 function eventQuit() {
     var options = {};
-    options.title = '信息对话框';
+    // options.title = '确定退出吗？';
     options.message = '确定退出吗？';
     options.type = 'none';
     options.buttons = ['Yes', 'No'];
@@ -40,7 +40,11 @@ function askChoice(ask_type) {
     if(ask_type == 0) {
         setNew()
     } else if (ask_type == 1) {
-        readFile(openFile())
+        filePath = openFile()
+        if (filePath) {
+            readFile(filePath)
+            document.title = returnFileName(filePath)
+        }
     } else {
         ipcRenderer.send('reqaction', 'exit');
     }
@@ -73,6 +77,15 @@ function askSave(ask_type) {
     }
 }
 
+// 获取文件名
+function returnFileName(filePath) {
+    if (platform == 'linux' || platform == 'darwin') {
+        var fileList = filePath.split('/')
+    } else {
+        var fileList = filePath.split('\\')
+    }
+    return fileList[fileList.length - 1]
+}
 
 // 写入文档
 function writeFile(filePath, fileData) {
@@ -84,6 +97,7 @@ function readFile(filePath) {
     window.document.getElementById('newText').value = fs.readFileSync(filePath, 'utf8');
 }
 
+// 打开保存对话框并返回路径
 function openSaveDialog() {
     var options = {};
     options.title = '保存文件';
@@ -95,11 +109,13 @@ function openSaveDialog() {
         {name: '文本文件', extensions: ['txt','js','html','md']},
         {name: '所有文件', extensions: ['*']}
     ]
-    return dialog.showSaveDialog(options)
+    // 保存成功返回一个路径，否则返回 undefined
+    var path = dialog.showSaveDialog(options)
+    return path == undefined ? false : path
   }
 
 
-// 打开有筛选的对话框
+// 打开打开对话框并返回路径
 function openFile(){
     var options = {};
     options.title = '打开文件';
@@ -110,7 +126,9 @@ function openFile(){
     options.filters = [
         {name: '文本文件', extensions: ['txt','js','html','md']}
     ]
-    return (dialog.showOpenDialog(options))[0]
+    // 打开成功返回一个数组，第一个元素为打开的路径,否则返回 undefined
+    var path = dialog.showOpenDialog(options)
+    return path == undefined ? false : path[0]
   }
 
 //监听与主进程的通信
@@ -133,18 +151,20 @@ ipcRenderer.on('action', (event, arg) => {
         case 'openfile':
             if (fileDocument.value == '' || fileDocument.value == null || isSave == true) {
                 filePath = openFile()
-                readFile(filePath)
-                console.log(filePath)
-                console.log(filePath.split('\\'))
+                if (filePath) {
+                    readFile(filePath)
+                    document.title = returnFileName(filePath)
+                }
             } else {
                 askSave(1)
             }
             break;
         case 'savefile':
             if (!filePath) filePath = openSaveDialog()
-            writeFile(filePath, fileDocument.value)
-            var fileList = filePath.split('\\')
-            window.document.title = fileList[fileList.length]
+            if (filePath) {
+                writeFile(filePath, fileDocument.value)
+                document.title = returnFileName(filePath)
+            }
             break;
     }
 });
