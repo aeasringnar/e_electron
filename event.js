@@ -90,6 +90,7 @@ function returnFileName(filePath) {
 // 写入文档
 function writeFile(filePath, fileData) {
     fs.writeFileSync(filePath, fileData);
+    isSave = true
 }
 
 // 读取文档
